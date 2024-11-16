@@ -1,0 +1,101 @@
+####Ubuntu下配置ShadowSocks Client
+
+1. 用`pip`安装ShadowSocksClient. [[1]](#1)
+
+		sudo apt-get install python-pip python-m2crypto -y
+		sudo pip install shadowsocks -y
+
+2. 配置ShadowSocks.
+
+		vi config.json
+
+		{
+			"server":"***",
+
+       	 	"server_port":8388,
+
+       		"local_port":"1080",
+
+       		"password":"***",
+
+        	"timeout":600,
+
+        	"method":"aes-256-cfb"
+		}
+
+		:w <FileName>
+
+
+	*注：用`touch config.json`也可以，保存退出 `:wq`
+
+
+3. 运行ShadowSocks.
+	- 直接用参数运行
+
+			sslocal -s <remoteHost> -p <remotePort> -b <localHost> -l <localPort> -k <password> -t 600 -m <method>
+
+	- 前台运行
+
+			sslocal -c config.json
+
+	- 后台运行
+
+			nohup sslocal -c config.json > log &
+
+4. 新建sh脚本
+
+		vi sslocal.sh
+		#!/bin/bash
+		#shadowsocks:sslocal.sh
+		nohup ssloacl -c config.json > /home/ss.log &
+
+5. 加入开机启动
+
+		vi /etc/rc.local
+
+	增加一行
+
+		sudo sh /home/ss.sh
+
+6. 使用Supervisor配置`sslocal`开机启动和进程守护 [[2]](#2)
+
+	1. Deploy Supervisor
+
+		pip install supervisor
+		or
+		easy_install supervisor
+
+	2. Initialize
+
+			# Initialize config file
+
+			# This command will create a demo config on /etc/supervisor/
+
+			echo_supervisord_conf >/etc
+
+	3. Setup 
+
+
+
+
+7. 维护
+	- 查看ssloacl进程：`ps -e|grep sslocal`
+	- 将进程置于后台：`Ctrl+Z`
+	- 将进程切换到前台：`fg sslocal`
+	- 查看后台进程：`jobs`
+
+___
+Reference:
+
+<a id="1">[1]</a> [pip GitBook](https://pip.pypa.io/en/latest/installing/)
+
+<a id="2">[2]</a> [Supervisor Gitbook](http://supervisord.org/)
+
+
+	[program:sslocal]
+	command = sslocal -c /home/explorare/sslocal.json
+	user = explorare
+	autostart = true
+	autorestart = true
+	stderr_logfile = /var/log/supervisor/sslocal.stderr.log
+	stdout_logfile = /var/log/supervisor/sslocal.stdout.log
